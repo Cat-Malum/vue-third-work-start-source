@@ -182,7 +182,9 @@
     import TaskCardViewTicksList from './TaskCardViewTicksList.vue'
     import AppButton from '@/common/components/AppButton.vue'
     import TaskCardCreatorTags from './TaskCardCreatorTags.vue'
+    import { useTasksStore } from '@/stores/tasks'
 
+    const tasksStore = useTasksStore()
     const props = defineProps({
         taskToEdit: {
             type: Object,
@@ -225,11 +227,9 @@
         : createNewTask()
 
     const task = ref(taskToWork)
-
-    const emits = defineEmits(['addTask', 'editTask', 'deleteTask'])
     
     function deleteTask() {
-        emits('deleteTask', task.value.id)
+        tasksStore.deleteTask(task.value.id)
         router.push('/')
     }
 
@@ -320,10 +320,10 @@
 
         if (props.taskToEdit) {
             // Редактируемая задача
-            emits('editTask', task.value)
+            tasksStore.editTask(task.value)
         } else {
             // Новая задача
-            emits('addTask', task.value)
+            tasksStore.addTask(task.value)
         }
 
         // Переход на главную страницу

@@ -1,0 +1,28 @@
+import { defineStore } from 'pinia';
+
+export const useColumnsStore = defineStore('columns', {
+    state: () => ({
+        columns: [],
+    }),
+    getters: {},
+    actions: {
+        async fetchColumns() {
+			// Получение данных из JSON-файла заменим в последующих разделах
+			this.columns = columns;
+		},
+		addColumn() {
+			// При создании колонки мы добавляем дефолтную, которую можем изменить позже
+			this.columns.push({ id: uniqueId('column_'), title: 'Новый столбец' });
+		},
+		updateColumn(column) {
+			const index = this.columns.findIndex(({ id }) => id === column.id);
+			
+            if (~index) {
+				this.columns.splice(index, 1, column);
+			}
+		},
+		deleteColumn(id) {
+			this.columns = this.columns.filter(column => column.id !== id);
+		}
+    },
+});
