@@ -13,7 +13,7 @@
                 >
                     <div class="comments__user">
                         <img
-                            :src="getImage(comment.user.avatar)"
+                            :src="getPublicImage(comment.user.avatar)"
                             :alt="comment.user.name"
                             width="30"
                             height="30"
@@ -49,62 +49,58 @@
 </template>
 
 <script setup>
-    import { getImage } from '@/common/helpers'
-    import { ref, computed, watch } from 'vue'
-    import AppTextarea from '@/common/components/AppTextarea.vue'
-    import AppButton from '@/common/components/AppButton.vue'
-    import users from '@/mocks/users.json'
-    import { validateFields, clearValidationErrors } from '../../../common/validator'
+  import { ref, computed, watch } from 'vue'
+  import { validateFields, clearValidationErrors } from '../../../common/validator'
+  import AppTextarea from '@/common/components/AppTextarea.vue'
+  import AppButton from '@/common/components/AppButton.vue'
+  import { getPublicImage } from '@/common/helpers'
+  import { useAuthStore, useCommentsStore } from '@/stores'
 
-    const props = defineProps({
-        taskId: {
-            type: Number,
-            required: true
-        },
-        comments: {
-            type: Array,
-            default: () => []
-        }
-    })
+  const authStore = useAuthStore()
+  const commentsStore = useCommentsStore()
 
-    const newComment = ref('')
-    const validations = ref({
-        newComment: {
-            error: '',
-            rules: ['required']
-        }
-    })
+  const props = defineProps({
+    taskId: {
+      type: Number,
+      required: true
+    },
+  })
 
-    const user = computed(() => users[0])
+  const emits = defineEmits(['createNewComment'])
 
-    const emits = defineEmits(['createNewComment'])
-
-    const submit = function () {
-        // Проверяем, валидно ли поле комментария
-        if (!validateFields({ newComment }, validations.value)) return
-        // Создаём объект комментария
-        const comment = {
-            text: newComment.value,
-            taskId: props.taskId,
-            userId: user.value.id,
-            user: {
-                id: user.value.id,
-                name: user.value.name,
-                avatar: user.value.avatar
-            }
-        }
-        // Отправляем комментарий в родительский компонент
-        emits('createNewComment', comment)
-        // Очищаем поле комментария
-        newComment.value = ''
+  const newComment = ref('')
+  const validations = ref({
+    newComment: {
+      error: '',
+      rules: ['required']
     }
+  })
 
-    // Отслеживаем значение поля комментария и очищаем ошибку при изменении
-    watch(newComment, () => {
-        if (validations.value.newComment.error) {
-            clearValidationErrors(validations.value)
-        }
-    })
+  const user = authStore.user
+  const comments = computed(() => {
+    return commentsStore.getCommentsByTaskId(props.taskId)
+  })
+  // Отслеживаем значение поля комментария и очищаем ошибку при изменении
+  watch(newComment, () => {
+    if (validations.value.newComment.error) {
+      clearValidationErrors(validations.value)
+    }
+  })
+
+  const submit = async function () {
+    // Проверяем, валидно ли поле комментария
+    if (!validateFields({ newComment }, validations.value)) return
+    // Создаём объект комментария
+    const comment = {
+      text: newComment.value,
+      taskId: props.taskId,
+      userId: user.id,
+    }
+    // Создаём комментарий
+    await commentsStore.addComment(comment)
+    // Очищаем поле комментария
+    newComment.value = ''
+  }
 </script>
 
 <style lang="scss" scoped>

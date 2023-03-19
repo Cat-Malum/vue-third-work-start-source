@@ -7,16 +7,16 @@ export const useFiltersStore = defineStore('filters', {
         statuses: [],
     }),
 	getters: {
-        filters: state => {
-			const { search, users, statuses } = state;
+    filters: state => {
+      const { search, users, statuses } = state;
             
-			return {
-				search,
-				users,
-				statuses
-			}
-		}
-    },
+      return {
+        search,
+        users,
+        statuses
+      }
+    }
+  },
 	actions: {
 		applyFilters ({ item, entity }) {
 			if (entity === 'search') {

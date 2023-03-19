@@ -182,9 +182,11 @@
     import TaskCardViewTicksList from './TaskCardViewTicksList.vue'
     import AppButton from '@/common/components/AppButton.vue'
     import TaskCardCreatorTags from './TaskCardCreatorTags.vue'
-    import { useTasksStore } from '@/stores/tasks'
+    import { useTasksStore, useTicksStore } from '@/stores/tasks'
 
     const tasksStore = useTasksStore()
+    const ticksStore = useTicksStore()
+
     const props = defineProps({
         taskToEdit: {
             type: Object,
@@ -293,13 +295,13 @@
     }
 
     function removeTick({ uuid, id }) {
-        if (uuid) {
-            task.value.ticks = task.value.ticks.filter(tick => tick.uuid !== uuid)
-        }
-
-        if (id) {
-            task.value.ticks = task.value.ticks.filter(tick => tick.id !== id)
-        }
+      if (uuid) {
+        task.value.ticks = task.value.ticks.filter(tick => tick.uuid !== uuid)
+      }
+      if (id) {
+        task.value.ticks = task.value.ticks.filter(tick => tick.id !== id)
+        ticksStore.deleteTick(id)
+      }
     }
 
     const isFormValid = ref(true)
@@ -310,24 +312,40 @@
         validations.value = setEmptyValidations()
     }, { deep: true })
         
-    function submit() {
-        // Валидируем задачу
-        if (!validateFields(task.value, validations.value)) {
-            isFormValid.value = false
+    async function submit () {
+      // Валидируем задачу
+      if (!validateFields(task.value, validations.value)) {
+        isFormValid.value = false
+        return
+      }
+      let taskId = task.value.id
+      if (props.taskToEdit) {
+        // Редактируемая задача
+        await tasksStore.editTask(task.value)
+      } else {
+        // Новая задача
+        const newTask = await tasksStore.addTask(task.value)
+        taskId = newTask.id
+      }
+      // Создать или обновить подзадачи
+      await submitTicks(taskId, task.value.ticks)
+      // Переход на главную страницу
+      await router.push('/')
+    }
 
+    async function submitTicks (taskId, ticks) {
+      const promises = ticks
+        .map(tick => {
+          if (!tick.text) {
             return
-        }
-
-        if (props.taskToEdit) {
-            // Редактируемая задача
-            tasksStore.editTask(task.value)
-        } else {
-            // Новая задача
-            tasksStore.addTask(task.value)
-        }
-
-        // Переход на главную страницу
-        router.push('/')
+          }
+          delete tick.uuid
+          tick.taskId = taskId
+          return tick.id
+            ? ticksStore.updateTick(tick)
+            : ticksStore.addTick(tick)
+        })
+      await Promise.all(promises)
     }
 
     function setTags(tags) {

@@ -15,7 +15,7 @@
                 class="users-list__user"
             >
                 <img
-                    :src="getImage(currentWorker.avatar)"
+                    :src="getPublicImage(currentWorker.avatar)"
                     @click.stop="isMenuOpened = !isMenuOpened"
                 />
                 <span @click.stop="isMenuOpened = !isMenuOpened">
@@ -40,7 +40,7 @@
                             class="users-list__user"
                             @click="setUser(user.id)"
                         >
-                            <img :src="getImage(user.avatar)" />
+                            <img :src="getPublicImage(user.avatar)" />
                             <span>{{ user.name }}</span>
                         </button>
                     </li>
@@ -55,6 +55,10 @@
     import { ref, computed } from 'vue'
     import { getImage } from '../../../common/helpers'
     import AppIcon from '@/common/components/AppIcon.vue'
+    import { getPublicImage } from '../../../common/helpers'
+    import { useUsersStore } from '@/stores'
+
+    const usersStore = useUsersStore()
 
     const props = defineProps({
         modelValue: {

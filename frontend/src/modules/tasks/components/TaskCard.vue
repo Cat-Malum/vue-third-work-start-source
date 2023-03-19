@@ -14,7 +14,7 @@
             >
                 <div class="task__avatar">
                     <img
-                        :src="getImage(task.user.avatar)"
+                        :src="getPublicImage(taskUser.avatar)"
                         alt="Аватар пользователя"
                         width="20"
                         height="20"
@@ -57,6 +57,11 @@
     import TaskCardTags from './TaskCardTags.vue'
     import { getImage } from '@/common/helpers'
     import { useRouter } from 'vue-router'
+    import { getPublicImage } from '@/common/helpers'
+    import { useUsersStore } from '@/stores'
+    import { computed } from 'vue'
+
+    const usersStore = useUsersStore()
 
     const router = useRouter()
 
@@ -68,6 +73,10 @@
     })
 
     defineEmits(['drop'])
+
+    const taskUser = computed(() => {
+      return usersStore.users.find(user => user.id === props.task.userId)
+    })
 </script>
 
 <style lang="scss" scoped>
